@@ -1,24 +1,42 @@
 package com.girogevoro.mapyandex.ui.home
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.drawable.Drawable
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.girogevoro.mapyandex.BuildConfig
+import com.girogevoro.mapyandex.R
 import com.girogevoro.mapyandex.databinding.FragmentHomeBinding
 import com.girogevoro.mapyandex.utils.PermissionHelperImpl
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
+import com.yandex.mapkit.map.MapObjectCollection
+import com.yandex.mapkit.map.PlacemarkMapObject
+import com.yandex.runtime.image.ImageProvider
+import com.yandex.runtime.ui_view.ViewProvider
 
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
+    private var locationManager: LocationManager? = null
+    protected var mapObjects: MapObjectCollection? = null
+    lateinit var imageProvider: ImageProvider
+    lateinit var placemark: PlacemarkMapObject
 
     private val permissionHelperLocation by lazy {
         PermissionHelperImpl(
@@ -37,10 +55,51 @@ class HomeFragment : Fragment() {
 
     }
 
-    private val binding get() = _binding!!
+    private val locationListener: LocationListener = LocationListener { location ->
+        binding.mapview.map.move(
+            CameraPosition(
+                Point(location.latitude, location.longitude),
+                DEF_ZOOM,
+                ZERO_FLOAT,
+                ZERO_FLOAT
+            ),
+            Animation(Animation.Type.SMOOTH, ZERO_FLOAT),
+            null
+        )
+
+//        mapObjects?.addPlacemark(
+//            Point(location.latitude, location.longitude),
+//            ImageProvider.fromResource(
+//                requireContext(),
+//                R.drawable.baseline_location_on_24
+//            )
+//        )
+
+        drawMyLocationMark(
+            location,
+            AppCompatResources.getDrawable(requireContext(), R.drawable.baseline_location_on_24)
+        )
+
+        stopUpdates()
+    }
+
+    private fun drawMyLocationMark(it: Location, drawable: Drawable?) {
+        val view = View(requireContext()).apply {
+            background = drawable
+        }
+
+        binding.mapview.map.mapObjects.addPlacemark(
+            Point(it.latitude, it.longitude),
+            ViewProvider(view)
+        )
+    }
+
+    private fun stopUpdates() {
+        locationManager?.removeUpdates(locationListener)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        MapKitFactory.setApiKey("3e03fbdf-45af-4fd3-b521-389a708d19a5");
+        MapKitFactory.setApiKey(BuildConfig.MAPKIT_API_KEY)
         MapKitFactory.initialize(requireContext());
         super.onCreate(savedInstanceState)
     }
@@ -59,12 +118,14 @@ class HomeFragment : Fragment() {
         return root
     }
 
+    @SuppressLint("MissingPermission")
     private fun setPermissionLocation() {
         binding.getPermissionButton.setOnClickListener {
             permissionHelperLocation.check()
         }
 
         permissionHelperLocation.setOnSuccessful {
+            mapObjects = binding.mapview.map.mapObjects
             binding.mapview.map.move(
                 CameraPosition(Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
                 Animation(Animation.Type.SMOOTH, 0f),
@@ -72,6 +133,23 @@ class HomeFragment : Fragment() {
             )
             binding.locationGroup.visibility = View.VISIBLE
             binding.requestPermissionLocationGroup.visibility = View.INVISIBLE
+
+            locationManager = requireActivity()
+                .getSystemService(Context.LOCATION_SERVICE) as LocationManager?
+            locationManager
+                ?.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    ZERO_LONG,
+                    ZERO_FLOAT,
+                    locationListener
+                )
+            locationManager
+                ?.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    ZERO_LONG,
+                    ZERO_FLOAT,
+                    locationListener
+                )
         }
 
         permissionHelperLocation.setOnUnsuccessful {
@@ -85,6 +163,7 @@ class HomeFragment : Fragment() {
     private fun useMap(use: Boolean) {
 
     }
+
     override fun onStart() {
         super.onStart()
         permissionHelperLocation.check()
@@ -105,4 +184,10 @@ class HomeFragment : Fragment() {
     }
 
 
+    companion object {
+        const val DEF_ZOOM = 16.0f
+        const val ZERO_FLOAT = 0f
+        const val ZERO_LONG = 0L
+
+    }
 }
