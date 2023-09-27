@@ -8,18 +8,12 @@
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.girogevoro.mapyandex.ui.map.MapFragment"
-        android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
-
-    <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.girogevoro.mapyandex.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:label="@string/title_map"
+        tools:layout="@layout/fragment_map" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.girogevoro.mapyandex.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:name="com.girogevoro.mapyandex.ui.markers.MarkersFragment"
+        android:label="@string/title_markers"
+        tools:layout="@layout/fragment_markers" />
 </navigation>

@@ -13,7 +13,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import com.girogevoro.mapyandex.BuildConfig
 import com.girogevoro.mapyandex.R
-import com.girogevoro.mapyandex.databinding.FragmentHomeBinding
+import com.girogevoro.mapyandex.databinding.FragmentMapBinding
 import com.girogevoro.mapyandex.domain.entity.MarkerEntity
 import com.girogevoro.mapyandex.utils.PermissionHelperImpl
 import com.yandex.mapkit.Animation
@@ -27,7 +27,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class MapFragment : Fragment() {
-    private var _binding: FragmentHomeBinding? = null
+    private var _binding: FragmentMapBinding? = null
     private val mapViewModel: MapViewModel by viewModel<MapViewModelImpl>()
     private val binding get() = _binding!!
 
@@ -69,7 +69,7 @@ class MapFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         setPermissionLocation()

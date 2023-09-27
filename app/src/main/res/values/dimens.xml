@@ -4,4 +4,11 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="size_button">48dp</dimen>
     <dimen name="margin_button">16dp</dimen>
+    <dimen name="margin_rv">8dp</dimen>
+    <dimen name="marker_edit_height">125dp</dimen>
+    <dimen name="marker_edit_image_size">48dp</dimen>
+    <dimen name="corner_radius">24dp</dimen>
+    <dimen name="padding">8dp</dimen>
+    <dimen name="margin_recycler_view">8dp</dimen>
+    <dimen name="text_size">24sp</dimen>
 </resources>

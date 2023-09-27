@@ -1,13 +1,13 @@
-package com.girogevoro.mapyandex.ui.dashboard
+package com.girogevoro.mapyandex.ui.markers
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class DashboardViewModel : ViewModel() {
+class MarkersViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "This is dashboard Fragment"
+        value = "This is notifications Fragment"
     }
     val text: LiveData<String> = _text
 }
