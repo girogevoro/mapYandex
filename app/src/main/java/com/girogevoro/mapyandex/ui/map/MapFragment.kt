@@ -61,6 +61,8 @@ class MapFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.setApiKey(BuildConfig.MAPKIT_API_KEY)
         MapKitFactory.initialize(requireContext())
+
+
         super.onCreate(savedInstanceState)
     }
 
@@ -71,17 +73,16 @@ class MapFragment : Fragment() {
     ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
         setPermissionLocation()
         initLocation()
         initMarkers()
+        mapViewModel.updateMarkers()
         return root
     }
 
     private fun initMarkers() {
         val inputListener = object : InputListener {
             override fun onMapTap(map: Map, point: Point) {
-                Toast.makeText(requireContext(), "123", Toast.LENGTH_SHORT).show()
             }
 
             override fun onMapLongTap(map: Map, point: Point) {

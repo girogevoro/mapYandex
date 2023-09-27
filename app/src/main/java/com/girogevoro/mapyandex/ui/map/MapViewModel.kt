@@ -7,7 +7,7 @@ import com.girogevoro.mapyandex.domain.entity.MarkerEntity
 interface MapViewModel {
     fun getLocation()
     fun setMarker(marker: MarkerEntity)
-
     fun getMarkersLiveData(): LiveData<List<MarkerEntity>>
     fun getLocationLiveData(): LiveData<Location>
+    fun updateMarkers()
 }
