@@ -22,6 +22,8 @@ import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.InputListener
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.MapObjectCollection
+import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.runtime.ui_view.ViewProvider
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -30,6 +32,19 @@ class MapFragment : Fragment() {
     private var _binding: FragmentMapBinding? = null
     private val mapViewModel: MapViewModel by viewModel<MapViewModelImpl>()
     private val binding get() = _binding!!
+
+    private lateinit var mapObjects: MapObjectCollection
+    private lateinit var  map: Map
+    private var inputListener: InputListener = object : InputListener {
+        override fun onMapTap(map: Map, point: Point) {
+        }
+
+        override fun onMapLongTap(map: Map, point: Point) {
+            mapViewModel.setMarker(MarkerEntity(point.latitude, point.longitude))
+        }
+    }
+    val placemarkList: MutableList<PlacemarkMapObject> = mutableListOf()
+    val viewList: MutableList<View> = mutableListOf()
 
     private val permissionHelperLocation by lazy {
         PermissionHelperImpl(
@@ -52,16 +67,16 @@ class MapFragment : Fragment() {
         val view = View(requireContext()).apply {
             background = drawable
         }
-        binding.mapview.map.mapObjects.addPlacemark(
+        viewList.add(view)
+        val placemark = mapObjects.addPlacemark(
             Point(latitude, longitude),
             ViewProvider(view)
         )
+        placemarkList.add(placemark)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.setApiKey(BuildConfig.MAPKIT_API_KEY)
-        MapKitFactory.initialize(requireContext())
-
 
         super.onCreate(savedInstanceState)
     }
@@ -73,6 +88,7 @@ class MapFragment : Fragment() {
     ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
+        MapKitFactory.initialize(requireContext())
         setPermissionLocation()
         initLocation()
         initMarkers()
@@ -81,24 +97,20 @@ class MapFragment : Fragment() {
     }
 
     private fun initMarkers() {
-        val inputListener = object : InputListener {
-            override fun onMapTap(map: Map, point: Point) {
-            }
-
-            override fun onMapLongTap(map: Map, point: Point) {
-                mapViewModel.setMarker(MarkerEntity(point.latitude, point.longitude))
-            }
-        }
-        binding.mapview.map.addInputListener(inputListener)
+        map = binding.mapview.map
+        mapObjects= binding.mapview.map.mapObjects
+        map.addInputListener(inputListener)
 
         mapViewModel.getMarkersLiveData().observe(viewLifecycleOwner) {
-            val mapObjects = binding.mapview.map.mapObjects
-            mapObjects.clear()
-            it.forEach {markerEntity->
+            //mapObjects.clear()
+            it.forEach { markerEntity ->
                 drawMyMarker(
                     markerEntity.lat,
                     markerEntity.lng,
-                    AppCompatResources.getDrawable(requireContext(), R.drawable.baseline_bookmark_24)
+                    AppCompatResources.getDrawable(
+                        requireContext(),
+                        R.drawable.baseline_bookmark_24
+                    )
                 )
             }
         }
@@ -109,7 +121,7 @@ class MapFragment : Fragment() {
             mapViewModel.getLocation()
         }
         mapViewModel.getLocationLiveData().observe(viewLifecycleOwner) { location ->
-            binding.mapview.map.move(
+            map.move(
                 CameraPosition(
                     Point(location.latitude, location.longitude),
                     DEF_ZOOM,
