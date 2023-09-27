@@ -114,7 +114,7 @@ class MapFragment : Fragment() {
             binding.requestPermissionLocationGroup.visibility = View.VISIBLE
             Toast.makeText(requireContext(), "user do not permission", Toast.LENGTH_SHORT).show()
         }
-        permissionHelperLocation.check()
+        permissionHelperLocation.check(true)
     }
 
 

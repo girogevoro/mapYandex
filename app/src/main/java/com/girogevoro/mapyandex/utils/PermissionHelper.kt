@@ -17,7 +17,7 @@ import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 interface PermissionHelper {
     fun setOnSuccessful(listener: () -> Unit)
     fun setOnUnsuccessful(listener: () -> Unit)
-    fun check()
+    fun check(isForce: Boolean = false)
 
     fun isGranted(): Boolean
 }
@@ -60,8 +60,8 @@ class PermissionHelperImpl(
         onUnsuccessful = listener
     }
 
-    override fun check() {
-        if (!isGranted() && !isStarted) {
+    override fun check(isForce: Boolean) {
+        if ((!isGranted() && !isStarted) || isForce) {
             isStarted = true
             runCheck()
         }
