@@ -1,12 +1,9 @@
-package com.girogevoro.mapyandex.ui.home
+package com.girogevoro.mapyandex.ui.map
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.drawable.Drawable
 import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,7 +12,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.girogevoro.mapyandex.BuildConfig
 import com.girogevoro.mapyandex.R
 import com.girogevoro.mapyandex.databinding.FragmentHomeBinding
@@ -24,19 +20,14 @@ import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
-import com.yandex.mapkit.map.MapObjectCollection
-import com.yandex.mapkit.map.PlacemarkMapObject
-import com.yandex.runtime.image.ImageProvider
 import com.yandex.runtime.ui_view.ViewProvider
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
-class HomeFragment : Fragment() {
+class MapFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
+    private val mapViewModel: MapViewModel by viewModel<MapViewModelImpl>()
     private val binding get() = _binding!!
-    private var locationManager: LocationManager? = null
-    protected var mapObjects: MapObjectCollection? = null
-    lateinit var imageProvider: ImageProvider
-    lateinit var placemark: PlacemarkMapObject
 
     private val permissionHelperLocation by lazy {
         PermissionHelperImpl(
@@ -55,47 +46,14 @@ class HomeFragment : Fragment() {
 
     }
 
-    private val locationListener: LocationListener = LocationListener { location ->
-        binding.mapview.map.move(
-            CameraPosition(
-                Point(location.latitude, location.longitude),
-                DEF_ZOOM,
-                ZERO_FLOAT,
-                ZERO_FLOAT
-            ),
-            Animation(Animation.Type.SMOOTH, ZERO_FLOAT),
-            null
-        )
-
-//        mapObjects?.addPlacemark(
-//            Point(location.latitude, location.longitude),
-//            ImageProvider.fromResource(
-//                requireContext(),
-//                R.drawable.baseline_location_on_24
-//            )
-//        )
-
-        drawMyLocationMark(
-            location,
-            AppCompatResources.getDrawable(requireContext(), R.drawable.baseline_location_on_24)
-        )
-
-        stopUpdates()
-    }
-
     private fun drawMyLocationMark(it: Location, drawable: Drawable?) {
         val view = View(requireContext()).apply {
             background = drawable
         }
-
         binding.mapview.map.mapObjects.addPlacemark(
             Point(it.latitude, it.longitude),
             ViewProvider(view)
         )
-    }
-
-    private fun stopUpdates() {
-        locationManager?.removeUpdates(locationListener)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,13 +67,34 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         setPermissionLocation()
+        initLocation()
         return root
+    }
+
+    private fun initLocation() {
+        binding.locationButton.setOnClickListener {
+            mapViewModel.getLocation()
+        }
+        mapViewModel.getLocationLiveData().observe(viewLifecycleOwner) { location ->
+            binding.mapview.map.move(
+                CameraPosition(
+                    Point(location.latitude, location.longitude),
+                    DEF_ZOOM,
+                    ZERO_FLOAT,
+                    ZERO_FLOAT
+                ),
+                Animation(Animation.Type.SMOOTH, ZERO_FLOAT),
+                null
+            )
+            drawMyLocationMark(
+                location,
+                AppCompatResources.getDrawable(requireContext(), R.drawable.baseline_location_on_24)
+            )
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -125,31 +104,9 @@ class HomeFragment : Fragment() {
         }
 
         permissionHelperLocation.setOnSuccessful {
-            mapObjects = binding.mapview.map.mapObjects
-            binding.mapview.map.move(
-                CameraPosition(Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
-                Animation(Animation.Type.SMOOTH, 0f),
-                null
-            )
             binding.locationGroup.visibility = View.VISIBLE
             binding.requestPermissionLocationGroup.visibility = View.INVISIBLE
 
-            locationManager = requireActivity()
-                .getSystemService(Context.LOCATION_SERVICE) as LocationManager?
-            locationManager
-                ?.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    ZERO_LONG,
-                    ZERO_FLOAT,
-                    locationListener
-                )
-            locationManager
-                ?.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER,
-                    ZERO_LONG,
-                    ZERO_FLOAT,
-                    locationListener
-                )
         }
 
         permissionHelperLocation.setOnUnsuccessful {
@@ -160,15 +117,12 @@ class HomeFragment : Fragment() {
         permissionHelperLocation.check()
     }
 
-    private fun useMap(use: Boolean) {
-
-    }
 
     override fun onStart() {
         super.onStart()
         permissionHelperLocation.check()
-
         MapKitFactory.getInstance().onStart();
+
         binding.mapview.onStart();
     }
 
