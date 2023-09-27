@@ -13,10 +13,10 @@ data class MarkerEntity(
     val lng: Double,
 
     @ColumnInfo(name = "title")
-    var title: String,
+    var title: String = "",
 
     @ColumnInfo(name = "description")
-    var description: String,
+    var description: String = "",
 
     @ColumnInfo(name = "id")
     @PrimaryKey(autoGenerate = true)

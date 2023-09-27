@@ -3,7 +3,6 @@ package com.girogevoro.mapyandex.ui.map
 import android.Manifest
 import android.annotation.SuppressLint
 import android.graphics.drawable.Drawable
-import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,11 +14,14 @@ import androidx.fragment.app.Fragment
 import com.girogevoro.mapyandex.BuildConfig
 import com.girogevoro.mapyandex.R
 import com.girogevoro.mapyandex.databinding.FragmentHomeBinding
+import com.girogevoro.mapyandex.domain.entity.MarkerEntity
 import com.girogevoro.mapyandex.utils.PermissionHelperImpl
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
+import com.yandex.mapkit.map.InputListener
+import com.yandex.mapkit.map.Map
 import com.yandex.runtime.ui_view.ViewProvider
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -43,22 +45,22 @@ class MapFragment : Fragment() {
                 "Продолжить"
             )
         )
-
     }
 
-    private fun drawMyLocationMark(it: Location, drawable: Drawable?) {
+
+    private fun drawMyMarker(latitude: Double, longitude: Double, drawable: Drawable?) {
         val view = View(requireContext()).apply {
             background = drawable
         }
         binding.mapview.map.mapObjects.addPlacemark(
-            Point(it.latitude, it.longitude),
+            Point(latitude, longitude),
             ViewProvider(view)
         )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.setApiKey(BuildConfig.MAPKIT_API_KEY)
-        MapKitFactory.initialize(requireContext());
+        MapKitFactory.initialize(requireContext())
         super.onCreate(savedInstanceState)
     }
 
@@ -72,7 +74,33 @@ class MapFragment : Fragment() {
 
         setPermissionLocation()
         initLocation()
+        initMarkers()
         return root
+    }
+
+    private fun initMarkers() {
+        val inputListener = object : InputListener {
+            override fun onMapTap(map: Map, point: Point) {
+                Toast.makeText(requireContext(), "123", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onMapLongTap(map: Map, point: Point) {
+                mapViewModel.setMarker(MarkerEntity(point.latitude, point.longitude))
+            }
+        }
+        binding.mapview.map.addInputListener(inputListener)
+
+        mapViewModel.getMarkersLiveData().observe(viewLifecycleOwner) {
+            val mapObjects = binding.mapview.map.mapObjects
+            mapObjects.clear()
+            it.forEach {markerEntity->
+                drawMyMarker(
+                    markerEntity.lat,
+                    markerEntity.lng,
+                    AppCompatResources.getDrawable(requireContext(), R.drawable.baseline_bookmark_24)
+                )
+            }
+        }
     }
 
     private fun initLocation() {
@@ -90,8 +118,9 @@ class MapFragment : Fragment() {
                 Animation(Animation.Type.SMOOTH, ZERO_FLOAT),
                 null
             )
-            drawMyLocationMark(
-                location,
+            drawMyMarker(
+                location.latitude,
+                location.longitude,
                 AppCompatResources.getDrawable(requireContext(), R.drawable.baseline_location_on_24)
             )
         }
@@ -121,14 +150,14 @@ class MapFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         permissionHelperLocation.check()
-        MapKitFactory.getInstance().onStart();
+        MapKitFactory.getInstance().onStart()
 
-        binding.mapview.onStart();
+        binding.mapview.onStart()
     }
 
     override fun onStop() {
-        binding.mapview.onStop();
-        MapKitFactory.getInstance().onStop();
+        binding.mapview.onStop()
+        MapKitFactory.getInstance().onStop()
         super.onStop()
     }
 
@@ -141,7 +170,5 @@ class MapFragment : Fragment() {
     companion object {
         const val DEF_ZOOM = 16.0f
         const val ZERO_FLOAT = 0f
-        const val ZERO_LONG = 0L
-
     }
 }

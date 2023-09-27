@@ -13,6 +13,7 @@ class MapViewModelImpl (val repository:Repository): ViewModel(), MapViewModel {
 
     private val markersLiveData = MutableLiveData<List<MarkerEntity>>()
     private val locationLiveData = MutableLiveData<Location>()
+    private val markersList = mutableListOf<MarkerEntity>()
 
     override fun getLocation() {
         viewModelScope.launch {
@@ -22,12 +23,9 @@ class MapViewModelImpl (val repository:Repository): ViewModel(), MapViewModel {
         }
     }
 
-    override fun getMarkers() {
-        TODO("Not yet implemented")
-    }
-
     override fun setMarker(marker: MarkerEntity) {
-        TODO("Not yet implemented")
+        markersList.add(marker)
+        markersLiveData.postValue(markersList)
     }
 
     override fun getMarkersLiveData(): LiveData<List<MarkerEntity>> {
